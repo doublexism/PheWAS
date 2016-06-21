@@ -9,7 +9,9 @@ function(phe.gen, additive.genotypes=T,min.records=20,return.models=F,confint.le
   gens=gen
   adjustment=phe.gen[[3]]
   #Subset the data
-  d=data[,na.omit(unlist(c(gen,phe,covariates,adjustment)))]
+ 
+  #Including weighting
+  d=data[,na.omit(unlist(c(gen,phe,covariates,adjustment,"weight")))]
   #Turn adjustment into a string, if not NA
   if(!is.na(adjustment[1])) {adjustment=paste(adjustment,collapse=",")}
   else {adjustment=NA_character_} #Make sure it is a character NA for aggregation
@@ -65,8 +67,9 @@ function(phe.gen, additive.genotypes=T,min.records=20,return.models=F,confint.le
       n_controls=n_total-n_cases
       if(n_cases<min.records|n_controls<min.records) {note=paste(note,"[Error: <",min.records," cases or controls]")}
       else {
-  
-        model = glm(as.formula(paste(phe," ~ .")), data=d, family=binomial)
+ 
+	#weighted Logisitic regression 
+        model = glm(as.formula(paste(phe," ~ .- weight")), data=d, family=binomial, weights=d$weight)
         modsum= summary(model)
         #Find the rows with results that gets merged across all loops
         gen_list=grep(gen,row.names(modsum$coef))
