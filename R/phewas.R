@@ -9,6 +9,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
     if(!missing(predictors)) genotypes=predictors
     else stop("Either genotypes or predictors must be passed in.")
   }
+  #Assign Association Method
   association_method=phe_as
   if(unadjusted) {
     association_method=phe_as_unadjusted
@@ -24,7 +25,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
     if(length(id)==0) {stop("There is no shared column to merge phenotypes and genotypes!")}
     message(paste("Merging data using these shared columns: ",id))
     phenotypes=names(phenotypes)
-    phenotypes=phenotypes[!(phenotypes %in% id)]
+    phenotypes=phenotypes[!(phenotypes %in% c(id, "weight"))]
     genotypes=names(genotypes)
     genotypes=genotypes[!(genotypes %in% id)]
     data=merge(phe,gen,by=id)
@@ -89,7 +90,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
   attributes(sig)$n.tests=n.tests
   if(!missing(significance.threshold)) {
     message("Finding significance thresholds...")
-    thresh=match(c("p-value","bonferroni","fdr","simplem-genotype","simplem-phenotype","simplem-product"),significance.threshold)
+    thresh=match(c("p-value","bonferroni","fdr","simplem-genotype","simplem-phenotype","simplem-product","hochberg"),significance.threshold)
     sm.g=1
     sm.p=1
     #p.value
@@ -144,6 +145,10 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
       sig$simplem.product=sig$p<=alpha/sm
       attributes(sig)$simplem.product=alpha/sm
       attributes(sig)$simplem.product.meff=sm
+    }
+    #hochberg 
+    if(!is.na(thresh[7])) {
+    sig$bochberg = p.adjust(sig$p, method="hochberg")<=alpha 
     }
   }
   if(!missing(outcomes)) names(sig)[names(sig)=="phenotype"]="outcome"
