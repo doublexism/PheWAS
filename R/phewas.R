@@ -56,7 +56,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
       rm(phewas.cluster.handle, envir=.GlobalEnv)
     }
     message("Starting cluster...")
-    assign("phewas.cluster.handle", makeCluster(cores, type="MPI"), envir = .GlobalEnv)
+    assign("phewas.cluster.handle", makeCluster(cores), envir = .GlobalEnv)
     message("Cluster created, finding associations...")
     clusterExport(phewas.cluster.handle,c("data", "covariates"), envir=environment())
     #Loop across every phenotype- iterate in parallel
