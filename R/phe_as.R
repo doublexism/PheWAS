@@ -1,7 +1,8 @@
 phe_as <-
 function(phe.gen, additive.genotypes=T,min.records=20,return.models=F,confint.level=NA, my.data, my.covariates) {
   if(!missing(my.data)) data=my.data
-  if(!missing(my.covariates)) covariates=my.covariates
+  if(!missing(my.covariates)) cov=my.covariates
+  require(speedglm)
   #Retrieve the targets for this loop
   phe_o=phe.gen[[1]]
   phe=phe_o
@@ -11,7 +12,7 @@ function(phe.gen, additive.genotypes=T,min.records=20,return.models=F,confint.le
   #Subset the data
  
   #Including weighting
-  d=data[,na.omit(unlist(c(gen,phe,covariates,adjustment,"weight")))]
+  d=data[,na.omit(unlist(c(gen,phe,cov,adjustment,"weight")))]
   #Turn adjustment into a string, if not NA
   if(!is.na(adjustment[1])) {adjustment=paste(adjustment,collapse=",")}
   else {adjustment=NA_character_} #Make sure it is a character NA for aggregation
