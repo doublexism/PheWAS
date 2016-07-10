@@ -17,34 +17,35 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
   }
   #If input is formatted as a set of data frames, reshape it
   if(missing(data)) {
-    phe=phenotypes
-    gen=genotypes
-    cov=covariates
-    adjustment=adjustments
     id=intersect(names(phenotypes),names(genotypes))
     if(length(id)==0) {stop("There is no shared column to merge phenotypes and genotypes!")}
     message(paste("Merging data using these shared columns: ",id))
-    phenotypes=names(phenotypes)
-    phenotypes=phenotypes[!(phenotypes %in% c(id, "weight"))]
-    genotypes=names(genotypes)
-    genotypes=genotypes[!(genotypes %in% id)]
-    data=merge(phe,gen,by=id)
+    phe=names(phenotypes)
+    phe=phe[!(phe %in% c(id, "weight"))]
+    gen=names(genotypes)
+    gen=gen[!(gen %in% id)]
+    data=merge(phenotypes,genotypes,by=id)
+    #remove useless dataframes
+    rm(phenotypes)
+    rm(genotypes)
     if(!is.null(names(covariates)[-1])) {
-      covariates=names(covariates)
-      if(sum(id %in% covariates)!=length(id)){stop(paste("The shared ID column(s) do not all exist in covariates: ",id))}
-      covariates=covariates[!(covariates %in% id)]
-      data=merge(data,cov,by=id)
+      cov=names(covariates)
+      if(sum(id %in% cov)!=length(id)){stop(paste("The shared ID column(s) do not all exist in covariates: ",id))}
+      cov=cov[!(cov %in% id)]
+      data=merge(data,covariates,by=id)
+      rm(covariates)
     }
+    adjustment=list(NA)
     if(!is.null(names(adjustments)[-1])) {
-      adjustments=names(adjustments)
+      adjustment=names(adjustments)
       if(sum(id %in% adjustments)!=length(id)){stop(paste("The shared ID column(s) do not all exist in adjustments: ",id))}
-      adjustments=as.list(c(NA,adjustments[!(adjustments %in% id)]))
-      data=merge(data,adjustment,by=id)
+      adjustment=as.list(c(NA,adjustment[!(adjustment %in% id)]))
+      data=merge(data,adjustments,by=id)
     }
   }
   para=(cores>1)
   #Create the list of combinations to iterate over
-  full_list=data.frame(t(expand.grid(phenotypes,genotypes,adjustments,stringsAsFactors=F)),stringsAsFactors=F)
+  full_list=data.frame(t(expand.grid(phe,gen,adjustment,stringsAsFactors=F)),stringsAsFactors=F)
 
   #If parallel, run the parallel version.
   if(para) {
@@ -58,7 +59,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
     message("Starting cluster...")
     assign("phewas.cluster.handle", makeCluster(cores), envir = .GlobalEnv)
     message("Cluster created, finding associations...")
-    clusterExport(phewas.cluster.handle,c("data", "covariates"), envir=environment())
+    clusterExport(phewas.cluster.handle,c("data", "cov"), envir=environment())
     #Loop across every phenotype- iterate in parallel
     result <-parLapplyLB(phewas.cluster.handle, full_list, association_method, additive.genotypes, confint.level=MASS.confint.level, min.records,return.models)
     #Once we have succeeded, stop the cluster and remove it.
@@ -67,7 +68,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
   } else {
     #Otherwise, just use lapply.
     message("Finding associations...")
-    result=lapply(full_list,FUN=association_method, additive.genotypes, min.records,return.models, confint.level=MASS.confint.level, data, covariates)
+    result=lapply(full_list,FUN=association_method, additive.genotypes, min.records,return.models, confint.level=MASS.confint.level, data, cov)
   }
 
   if(return.models) {
