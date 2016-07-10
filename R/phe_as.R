@@ -69,15 +69,15 @@ function(phe.gen, additive.genotypes=T,min.records=20,return.models=F,confint.le
       else {
  
 	#weighted Logisitic regression 
-        model = glm(as.formula(paste(phe," ~ .- weight")), data=d, family=binomial, weights=d$weight)
+        model = speedglm(as.formula(paste(phe," ~ .- weight")), data=d, family=binomial(), weights=d$weight)
         modsum= summary(model)
         #Find the rows with results that gets merged across all loops
         gen_list=grep(gen,row.names(modsum$coef))
         gens=row.names(modsum$coef)[gen_list]
-        or=exp(modsum$coef[gen_list,1])
-        beta=modsum$coef[gen_list,1]
-        se=modsum$coef[gen_list,2]
-        p=modsum$coef[gen_list,4]      
+        or=exp(as.numeric(modsum$coef[gen_list,1]))
+        beta=as.numeric(modsum$coef[gen_list,1])
+        se=as.numeric(modsum$coef[gen_list,2])
+        p=as.numeric(modsum$coef[gen_list,4])
       }
     } else {
       type = "linear"
