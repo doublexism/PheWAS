@@ -24,15 +24,14 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
     phe=phe[!(phe %in% c(id, "weight"))]
     gen=names(genotypes)
     gen=gen[!(gen %in% id)]
-    data=merge(phenotypes,genotypes,by=id)
+    phenotypes=merge(phenotypes,genotypes,by=id)
     #remove useless dataframes
-    rm(phenotypes)
     rm(genotypes)
     if(!is.null(names(covariates)[-1])) {
       cov=names(covariates)
       if(sum(id %in% cov)!=length(id)){stop(paste("The shared ID column(s) do not all exist in covariates: ",id))}
       cov=cov[!(cov %in% id)]
-      data=merge(data,covariates,by=id)
+      phenotypes = merge(phenotypes,covariates,by=id)
       rm(covariates)
     }
     adjustment=list(NA)
@@ -40,8 +39,9 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
       adjustment=names(adjustments)
       if(sum(id %in% adjustments)!=length(id)){stop(paste("The shared ID column(s) do not all exist in adjustments: ",id))}
       adjustment=as.list(c(NA,adjustment[!(adjustment %in% id)]))
-      data=merge(data,adjustments,by=id)
+      phenotypes=merge(phenotypes,adjustments,by=id)
     }
+    data=phenotypes
   }
   para=(cores>1)
   #Create the list of combinations to iterate over
