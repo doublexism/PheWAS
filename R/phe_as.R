@@ -143,5 +143,6 @@ function(phe.gen, additive.genotypes=T,min.records=20,return.models=F,confint.le
   attributes(output)$successful.phenotype=ifelse(is.na(p),NA,phe_o)
   attributes(output)$successful.genotype=ifelse(is.na(p),NA,gen)
   #Return this to the loop to be merged.
-  output
+  return(output)
+  gc()
 }
