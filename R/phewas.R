@@ -1,6 +1,6 @@
 phewas <-
 function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcomes, predictors, cores=1, additive.genotypes=T, 
-         significance.threshold, alpha=0.05, unadjusted=F, return.models=F, min.records=20, MASS.confint.level=NA,quick.confint.level) {
+         significance.threshold, alpha=0.05, unadjusted=F, return.models=F, min.records=20, MASS.confint.level=NA,quick.confint.level, chunk.size) {
   if(missing(phenotypes)) {
     if(!missing(outcomes)) phenotypes=outcomes
     else stop("Either phenotypes or outcomes must be passed in.")
@@ -61,7 +61,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
     message("Cluster created, finding associations...")
     clusterExport(phewas.cluster.handle,c("data", "cov"), envir=environment())
     #Loop across every phenotype- iterate in parallel
-    result <-parLapplyLB(phewas.cluster.handle, full_list, association_method, additive.genotypes, confint.level=MASS.confint.level, min.records,return.models)
+    result <-parLapplyLB(phewas.cluster.handle, full_list, association_method, additive.genotypes, confint.level=MASS.confint.level, chunk.size=chunk.size, min.records,return.models)
     gc()
     #Once we have succeeded, stop the cluster and remove it.
     stopCluster(phewas.cluster.handle)
@@ -70,7 +70,7 @@ function(phenotypes,genotypes,data,covariates=c(NA),adjustments=list(NA), outcom
   } else {
     #Otherwise, just use lapply.
     message("Finding associations...")
-    result=lapply(full_list,FUN=association_method, additive.genotypes, min.records,return.models, confint.level=MASS.confint.level, data, cov)
+    result=lapply(full_list,FUN=association_method, additive.genotypes, min.records,return.models, confint.level=MASS.confint.level, data, cov,chunk.size=chunk.size)
     gc()
   }
 
